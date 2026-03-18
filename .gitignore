@@ -1,0 +1,49 @@
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# ChromaDB local vector store
+chroma_db/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Byte-compiled files
+*.pyc
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dataset (optional — remove this line if you want to track your PDF)
+dataset/
