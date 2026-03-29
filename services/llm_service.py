@@ -1,4 +1,4 @@
-from google import genai
+from groq import Groq
 from config import Settings
 
 settings = Settings()
@@ -6,7 +6,8 @@ settings = Settings()
 
 class LLMService:
     def __init__(self):
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        self.client = Groq(api_key=settings.GROQ_API_KEY)
+        self.model = "llama-3.3-70b-versatile"
 
     def generate_response(self, extracted_input: str, search_results: list[dict]):
         context_text = "\n\n".join(
@@ -39,8 +40,13 @@ class LLMService:
         (actionable insights or recommendations based on the document)
         """
 
-        for chunk in self.client.models.generate_content_stream(
-            model="gemini-2.5-flash",
-            contents=full_prompt,
-        ):
-            yield chunk.text
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": full_prompt}],
+            stream=True,
+        )
+
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta

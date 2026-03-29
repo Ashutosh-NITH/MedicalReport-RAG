@@ -45,5 +45,3 @@ Thumbs.db
 .coverage
 htmlcov/
 
-# Dataset (optional — remove this line if you want to track your PDF)
-dataset/

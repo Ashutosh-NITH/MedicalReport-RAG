@@ -8,7 +8,8 @@ settings = Settings()
 
 class FileExtractionService:
     def __init__(self):
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        # Gemini client kept solely for Vision-based image extraction
+        self.vision_client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     def extract_from_pdf(self, pdf_bytes: bytes) -> str:
         """Extract all text from an uploaded PDF."""
@@ -23,7 +24,7 @@ class FileExtractionService:
         """Use Gemini Vision to extract text/info from an uploaded image."""
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
-        response = self.client.models.generate_content(
+        response = self.vision_client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[
                 {
@@ -42,3 +43,5 @@ class FileExtractionService:
             ]
         )
         return response.text
+
+
