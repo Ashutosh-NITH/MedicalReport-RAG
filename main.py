@@ -21,9 +21,13 @@ ALLOWED_TYPES = {
 }
 
 
+@app.get("/")
+async def health_check():
+    return {"status": "ok", "message": "RAG model is running"}
+
+
 @app.post("/chat")
 async def chat_endpoint(file: UploadFile = File(...)):
-    # Validate file type
     if file.content_type not in ALLOWED_TYPES:
         return {
             "error": f"Unsupported file type: {file.content_type}. Allowed: PDF, JPEG, PNG, WEBP, GIF"
@@ -31,7 +35,6 @@ async def chat_endpoint(file: UploadFile = File(...)):
 
     contents = await file.read()
 
-    # Step 1: Extract text from uploaded file
     if file.content_type == "application/pdf":
         extracted_text = file_extraction_service.extract_from_pdf(contents)
     else:
@@ -42,10 +45,8 @@ async def chat_endpoint(file: UploadFile = File(...)):
     if not extracted_text.strip():
         return {"error": "Could not extract any content from the uploaded file."}
 
-    # Step 2: Query ChromaDB with extracted text
-    results = vector_store_service.query(extracted_text[:1000])  # use first 1000 chars as query
+    results = vector_store_service.query(extracted_text[:1000])
 
-    # Step 3: Stream LLM summary + suggestions
     return StreamingResponse(
         llm_service.generate_response(extracted_text, results),
         media_type="text/plain",
@@ -56,10 +57,9 @@ async def chat_endpoint(file: UploadFile = File(...)):
 async def websocket_chat_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
-        # Receive file metadata + base64 content via websocket
         data = await websocket.receive_json()
         file_b64 = data.get("file")
-        mime_type = data.get("mime_type")  # e.g. "application/pdf" or "image/jpeg"
+        mime_type = data.get("mime_type")
 
         if not file_b64 or not mime_type:
             await websocket.send_json({"type": "error", "data": "Missing file or mime_type"})
@@ -68,18 +68,15 @@ async def websocket_chat_endpoint(websocket: WebSocket):
         import base64
         file_bytes = base64.b64decode(file_b64)
 
-        # Step 1: Extract text
         if mime_type == "application/pdf":
             extracted_text = file_extraction_service.extract_from_pdf(file_bytes)
         else:
             extracted_text = file_extraction_service.extract_from_image(file_bytes, mime_type)
 
-        # Step 2: Query ChromaDB
         results = vector_store_service.query(extracted_text[:1000])
         await asyncio.sleep(0.1)
         await websocket.send_json({"type": "search_result", "data": results})
 
-        # Step 3: Stream response
         for chunk in llm_service.generate_response(extracted_text, results):
             await asyncio.sleep(0.1)
             await websocket.send_json({"type": "content", "data": chunk})
@@ -89,3 +86,8 @@ async def websocket_chat_endpoint(websocket: WebSocket):
         await websocket.send_json({"type": "error", "data": str(e)})
     finally:
         await websocket.close()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=10000)
