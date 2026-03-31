@@ -1,6 +1,7 @@
 import asyncio
 from fastapi import FastAPI, WebSocket, UploadFile, File
 from fastapi.responses import StreamingResponse
+import os
 
 from services.llm_service import LLMService
 from services.vector_store_service import VectorStoreService
@@ -90,6 +91,6 @@ async def websocket_chat_endpoint(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    import os
     port = int(os.environ.get("PORT", 10000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    print(f"Starting server on port {port}")  # <-- helps debug
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
