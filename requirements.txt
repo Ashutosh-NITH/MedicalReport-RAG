@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 fastapi
 uvicorn
 pydantic-settings
@@ -7,4 +8,4 @@ sentence-transformers
 pymupdf
 python-dotenv
 groq
-python-multipart   
+python-multipart
